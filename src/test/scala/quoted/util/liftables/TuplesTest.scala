@@ -10,7 +10,6 @@ import util.Runners._
 class TuplesTest {
 
   @Test def testLifing: Unit = {
-    // FixClasspath()
     import Tuples._
     val t1: Expr[Tuple1[Int]] = Tuple1(1)
     val t2: Expr[(Int, Int)] = (1, 2)
