@@ -1,4 +1,4 @@
-val dottyVersion = "0.6.0-RC1"
+val dottyVersion = dottyLatestNightlyBuild.get
 
 lazy val root = (project in file(".")).
   settings(
@@ -10,7 +10,7 @@ lazy val root = (project in file(".")).
     testOptions in Test += Tests.Argument(TestFrameworks.JUnit, "-a", "-v"),
 
     libraryDependencies ++= Seq(
-      "ch.epfl.lamp" % "dotty_0.6" % "0.6.0-RC1" % "test->runtime",
+      "ch.epfl.lamp" % "dotty_0.7" % dottyVersion % "test->runtime",
       "com.novocode" % "junit-interface" % "0.11" % "test"
     )
   )

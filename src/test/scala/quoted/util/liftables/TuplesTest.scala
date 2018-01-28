@@ -5,7 +5,7 @@ package liftables
 import org.junit.Test
 import org.junit.Assert._
 
-import util.Runners._
+import dotty.tools.dotc.quoted.Runners._
 
 class TuplesTest {
 
