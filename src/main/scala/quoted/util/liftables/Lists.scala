@@ -1,7 +1,7 @@
 package scala.quoted
 package util.liftables
 
-import AnyToExpr._
+import scala.quoted.Liftable._
 
 object Lists {
   implicit def ListIsLiftable[T: Liftable](implicit t: Type[T]): Liftable[List[T]] = {

@@ -2,6 +2,8 @@ package scala.quoted
 package util
 package liftables
 
+import scala.quoted.Liftable._
+
 import org.junit.Test
 import org.junit.Assert._
 
@@ -9,7 +11,6 @@ import dotty.tools.dotc.quoted.Runners._
 
 class ListsTest {
   import Lists._
-  import AnyToExpr._
 
   @Test def testLifing: Unit = {
     val nil: Expr[List[Int]] = Nil
