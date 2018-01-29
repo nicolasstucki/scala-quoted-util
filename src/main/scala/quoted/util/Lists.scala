@@ -1,13 +1,9 @@
 package scala.quoted
-package util.liftables
+package util
 
 import scala.quoted.Liftable._
 
 object Lists {
-  implicit def ListIsLiftable[T : Liftable](implicit t: Type[T]): Liftable[List[T]] = {
-    case x :: xs  => '{ ~x.toExpr :: ~xs.toExpr }
-    case Nil => '{ Nil: List[~t] }
-  }
 
   implicit class LiftedOps[T : Liftable](list: Expr[List[T]]) {
     def foldLeft[U : Type](acc: Expr[U])(f: Expr[(U, T) => U]): Expr[U] =

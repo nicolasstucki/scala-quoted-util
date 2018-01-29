@@ -1,9 +1,19 @@
 package scala.quoted
-package util.liftables
+package util
 
 import scala.quoted.Liftable._
 
-object Tuples {
+object Lifters {
+
+  // Seq lifters
+
+  implicit def ListIsLiftable[T : Liftable](implicit t: Type[T]): Liftable[List[T]] = {
+    case x :: xs  => '{ ~x.toExpr :: ~xs.toExpr }
+    case Nil => '{ Nil: List[~t] }
+  }
+
+  // Tuple lifters
+
   implicit def Tuple1IsLiftable[T1 : Liftable : Type]: Liftable[Tuple1[T1]] = {
     x => '{ Tuple1(~x._1.toExpr) }
   }
