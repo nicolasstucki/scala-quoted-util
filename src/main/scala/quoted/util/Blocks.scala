@@ -14,7 +14,9 @@ object Blocks {
     case Seq(x1, x2, x3, x4) => '{ ~x1; ~x2; ~x3; ~x4; ~expr }
     case _ => // TODO make tree shallower
       val (stats1, stats2) = stats.splitAt(stats.length / 2)
-      '{ ~block(stats1, ()); ~block(stats2, expr) }
+      '{ ~Blocks.stats(stats1); ~block(stats2, expr) }
   }
+
+  def stats(stats: Seq[Expr[_]]): Expr[Unit] = block(stats, ())
 
 }

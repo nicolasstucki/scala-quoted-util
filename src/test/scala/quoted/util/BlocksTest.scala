@@ -14,9 +14,11 @@ class BlocksTest {
 
   @Test def listOps: Unit = {
     for (i <- 0 to 10) {
-      def stats(sb: Expr[StringBuilder]): List[Expr[_]] = List.fill(i)('{ (~sb).append("a") })
-      val expr = '{ val sb = new StringBuilder; ~block(stats('(sb)), '(sb.result)) }
-      assertEquals("a" * i, expr.run)
+      def stats1(sb: Expr[StringBuilder]): List[Expr[_]] = List.fill(i)('{ (~sb).append("a") })
+      val blockExpr = '{ val sb = new StringBuilder; ~block(stats1('(sb)), '(sb.result)) }
+      val statsExpr = '{ val sb = new StringBuilder; ~stats(stats1('(sb))); sb.result }
+      assertEquals("a" * i, blockExpr.run)
+      assertEquals("a" * i, statsExpr.run)
     }
   }
 
