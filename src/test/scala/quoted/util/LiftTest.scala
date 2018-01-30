@@ -1,7 +1,6 @@
 package scala.quoted
 package util
 
-import scala.quoted.Liftable._
 import scala.quoted.util.Lifters._
 import scala.quoted.util.Unrolled._
 

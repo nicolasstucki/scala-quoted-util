@@ -1,9 +1,11 @@
 package scala.quoted
 package util
 
-import scala.quoted.Liftable._
-
 object Lifters {
+
+  implicit class LiftExprOps[T](val x: T) extends AnyVal {
+    def toExpr(implicit liftable: Liftable[T]): Expr[T] = liftable.toExpr(x)
+  }
 
   // TODO add it to scala.quoted.Liftable
   implicit def UnitIsLiftable: Liftable[Unit] = {
