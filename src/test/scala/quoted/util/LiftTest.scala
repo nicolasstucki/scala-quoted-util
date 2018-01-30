@@ -3,7 +3,7 @@ package util
 
 import scala.quoted.Liftable._
 import scala.quoted.util.Lifters._
-import scala.quoted.util.Lists._
+import scala.quoted.util.Unrolled._
 
 import org.junit.Test
 import org.junit.Assert._

@@ -5,6 +5,7 @@ import scala.quoted.Liftable._
 
 object Lifters {
 
+  // TODO add it to scala.quoted.Liftable
   implicit def UnitIsLiftable: Liftable[Unit] = {
     _  => '{ () }
   }
