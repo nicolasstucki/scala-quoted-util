@@ -1,16 +1,41 @@
 package scala.quoted
 package util
 
+import scala.quoted.Liftable._
 import scala.quoted.util.Lifters._
+import scala.quoted.util.Lists._
 
 import org.junit.Test
 import org.junit.Assert._
 
 import dotty.tools.dotc.quoted.Runners._
 
-class TuplesTest {
+class LiftTest {
 
-  @Test def testLifing: Unit = {
+  @Test def unit: Unit = {
+    val unit: Expr[Unit] = ()
+    assertEquals((), unit.run)
+  }
+
+  @Test def options: Unit = {
+    val none: Expr[Option[Int]] = None
+    val some: Expr[Option[Int]] = Some(1)
+
+    assertEquals(None, none.run)
+    assertEquals(Some(1), some.run)
+  }
+
+  @Test def lists: Unit = {
+    val nil: Expr[List[Int]] = Nil
+    val l1: Expr[List[Int]] = List(1)
+    val l2: Expr[List[Int]] = List(1, 2)
+
+    assertEquals(Nil, nil.run)
+    assertEquals(List(1), l1.run)
+    assertEquals(List(1, 2), l2.run)
+  }
+
+  @Test def tuples: Unit = {
     val t1: Expr[Tuple1[Int]] = Tuple1(1)
     val t2: Expr[(Int, Int)] = (1, 2)
     val t3: Expr[(Int, Int, Int)] = (1, 2, 3)
@@ -57,5 +82,4 @@ class TuplesTest {
     assertEquals((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21), t21.run)
     assertEquals((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22), t22.run)
   }
-
 }

@@ -5,6 +5,10 @@ import scala.quoted.Liftable._
 
 object Lifters {
 
+  implicit def UnitIsLiftable: Liftable[Unit] = {
+    _  => '{ () }
+  }
+
   implicit def OptionIsLiftable[T : Liftable : Type]: Liftable[Option[T]] = {
     case Some(x)  => '{ Some(~x.toExpr): Option[T] }
     case None => '{ None: Option[T] }
