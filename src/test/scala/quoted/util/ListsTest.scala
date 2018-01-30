@@ -1,6 +1,5 @@
 package scala.quoted
 package util
-package liftables
 
 import scala.quoted.Liftable._
 import scala.quoted.util.Lifters._
