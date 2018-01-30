@@ -12,9 +12,9 @@ object Lifters {
 
   // Seq lifters
 
-  implicit def ListIsLiftable[T : Liftable](implicit t: Type[T]): Liftable[List[T]] = {
+  implicit def ListIsLiftable[T : Liftable : Type]: Liftable[List[T]] = {
     case x :: xs  => '{ ~x.toExpr :: ~xs.toExpr }
-    case Nil => '{ Nil: List[~t] }
+    case Nil => '{ List.empty[T] }
   }
 
   // Tuple lifters
