@@ -34,6 +34,82 @@ class LiftTest {
     assertEquals(List(1, 2), l2.run)
   }
 
+  @Test def byteArrays: Unit = {
+    val nil: Expr[Array[Byte]] = Array.empty[Byte]
+    val a1: Expr[Array[Byte]] = Array[Byte](1)
+    val a2: Expr[Array[Byte]] = Array[Byte](1, 2)
+    assertArrayEquals(Array.empty[Byte], nil.run)
+    assertArrayEquals(Array[Byte](1), a1.run)
+    assertArrayEquals(Array[Byte](1, 2), a2.run)
+  }
+
+  @Test def shortArrays: Unit = {
+    val nil: Expr[Array[Short]] = Array.empty[Short]
+    val a1: Expr[Array[Short]] = Array[Short](1)
+    val a2: Expr[Array[Short]] = Array[Short](1, 2)
+    assertArrayEquals(Array.empty[Short], nil.run)
+    assertArrayEquals(Array[Short](1), a1.run)
+    assertArrayEquals(Array[Short](1, 2), a2.run)
+  }
+
+  @Test def charArrays: Unit = {
+    val nil: Expr[Array[Char]] = Array.empty[Char]
+    val a1: Expr[Array[Char]] = Array[Char]('a')
+    val a2: Expr[Array[Char]] = Array[Char]('a', 'b')
+    assertArrayEquals(Array.empty[Char], nil.run)
+    assertArrayEquals(Array[Char]('a'), a1.run)
+    assertArrayEquals(Array[Char]('a', 'b'), a2.run)
+  }
+
+  @Test def intArrays: Unit = {
+    val nil: Expr[Array[Int]] = Array.empty[Int]
+    val a1: Expr[Array[Int]] = Array(1)
+    val a2: Expr[Array[Int]] = Array(1, 2)
+    assertArrayEquals(Array.empty[Int], nil.run)
+    assertArrayEquals(Array(1), a1.run)
+    assertArrayEquals(Array(1, 2), a2.run)
+  }
+
+  @Test def longArrays: Unit = {
+    val nil: Expr[Array[Long]] = Array.empty[Long]
+    val a1: Expr[Array[Long]] = Array(1L)
+    val a2: Expr[Array[Long]] = Array(1L, 2L)
+    assertArrayEquals(Array.empty[Long], nil.run)
+    assertArrayEquals(Array(1L), a1.run)
+    assertArrayEquals(Array(1L, 2L), a2.run)
+  }
+
+  @Test def floatArrays: Unit = {
+    val nil: Expr[Array[Float]] = Array.empty[Float]
+    val a1: Expr[Array[Float]] = Array(1.0f)
+    val a2: Expr[Array[Float]] = Array(1.0f, 2.0f)
+    assertArrayEquals(Array.empty[Float], nil.run, 0.0f)
+    assertArrayEquals(Array(1.0f), a1.run, 0.0f)
+    assertArrayEquals(Array(1.0f, 2.0f), a2.run, 0.0f)
+  }
+
+  @Test def doubleArrays: Unit = {
+    val nil: Expr[Array[Double]] = Array.empty[Double]
+    val a1: Expr[Array[Double]] = Array[Double](1.0)
+    val a2: Expr[Array[Double]] = Array[Double](1.0, 2.0)
+    assertArrayEquals(Array.empty[Double], nil.run, 0.0)
+    assertArrayEquals(Array[Double](1.0), a1.run, 0.0)
+    assertArrayEquals(Array[Double](1.0, 2.0), a2.run, 0.0)
+  }
+
+  @Test def arrays: Unit = {
+    // TODO find a way to lift ClassTags
+    implicit val ct: Expr[reflect.ClassTag[String]] = '{implicitly[reflect.ClassTag[String]]}
+
+    val nil: Expr[Array[String]] = Array.empty[String]
+    val a1: Expr[Array[String]] = Array("a")
+    val a2: Expr[Array[String]] = Array("a", "b")
+
+    assertArrayEquals(Array.empty[Object], nil.run.asInstanceOf[Array[Object]])
+    assertArrayEquals(Array[Object]("a"), a1.run.asInstanceOf[Array[Object]])
+    assertArrayEquals(Array[Object]("a", "b"), a2.run.asInstanceOf[Array[Object]])
+  }
+
   @Test def tuples: Unit = {
     val t1: Expr[Tuple1[Int]] = Tuple1(1)
     val t2: Expr[(Int, Int)] = (1, 2)

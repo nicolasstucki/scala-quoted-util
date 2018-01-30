@@ -1,6 +1,8 @@
 package scala.quoted
 package util
 
+import scala.quoted.util.Unrolled._
+
 object Lifters {
 
   implicit class LiftExprOps[T](val x: T) extends AnyVal {
@@ -22,6 +24,54 @@ object Lifters {
   implicit def ListIsLiftable[T : Liftable : Type]: Liftable[List[T]] = {
     case x :: xs  => '{ ~x.toExpr :: ~xs.toExpr }
     case Nil => '{ List.empty[T] }
+  }
+
+  // Array lifters
+
+  implicit def ArrayIsLiftable[T : Liftable : Type](implicit ct: Expr[reflect.ClassTag[T]]): Liftable[Array[T]] = arr => '{
+    val array = new Array[T](~arr.length.toExpr)(~ct)
+    ~initArray(arr, '(array))
+  }
+
+  implicit def ByteArrayIsLiftable: Liftable[Array[Byte]] = arr => '{
+    val array = new Array[Byte](~arr.length.toExpr)
+    ~initArray(arr, '(array))
+  }
+
+  implicit def ShortArrayIsLiftable: Liftable[Array[Short]] = arr => '{
+    val array = new Array[Short](~arr.length.toExpr)
+    ~initArray(arr, '(array))
+  }
+
+  implicit def CharArrayIsLiftable: Liftable[Array[Char]] = arr => '{
+    val array = new Array[Char](~arr.length.toExpr)
+    ~initArray(arr, '(array))
+  }
+
+  implicit def IntArrayIsLiftable: Liftable[Array[Int]] = arr => '{
+    val array = new Array[Int](~arr.length.toExpr)
+    ~initArray(arr, '(array))
+  }
+
+  implicit def LongArrayIsLiftable: Liftable[Array[Long]] = arr => '{
+    val array = new Array[Long](~arr.length.toExpr)
+    ~initArray(arr, '(array))
+  }
+
+  implicit def FloatArrayIsLiftable: Liftable[Array[Float]] = arr => '{
+    val array = new Array[Float](~arr.length.toExpr)
+    ~initArray(arr, '(array))
+  }
+
+  implicit def DoubleArrayIsLiftable: Liftable[Array[Double]] = arr => '{
+    val array = new Array[Double](~arr.length.toExpr)
+    ~initArray(arr, '(array))
+  }
+
+  private def initArray[T : Liftable](arr: Array[T], array: Expr[Array[T]]): Expr[Array[T]] = {
+    arr.zipWithIndex.map {
+      case (x, i) => '{ (~array)(~i.toExpr) = ~x.toExpr }
+    }.toList.toBlock(array)
   }
 
   // Tuple lifters
