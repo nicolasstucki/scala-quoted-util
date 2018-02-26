@@ -9,11 +9,6 @@ object Lifters {
     def toExpr(implicit liftable: Liftable[T]): Expr[T] = liftable.toExpr(x)
   }
 
-  // TODO add it to scala.quoted.Liftable
-  implicit def UnitIsLiftable: Liftable[Unit] = {
-    _  => '{ () }
-  }
-
   implicit def OptionIsLiftable[T : Liftable : Type]: Liftable[Option[T]] = {
     case Some(x)  => '{ Some(~x.toExpr): Option[T] }
     case None => '{ None: Option[T] }
