@@ -7,7 +7,7 @@ import scala.quoted.util.Unrolled._
 import org.junit.Test
 import org.junit.Assert._
 
-import dotty.tools.dotc.quoted.Runners._
+import dotty.tools.dotc.quoted.Toolbox._
 
 class BlocksTest {
 
