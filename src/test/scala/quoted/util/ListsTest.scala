@@ -21,18 +21,12 @@ class ListsTest {
 
     assertEquals(1, List(1).unrolledFoldLeft(0.toExpr)((acc, x) => '{ ~acc + ~x.toExpr } ).run)
     assertEquals(
-      """{
-        |  0.+(1)
-        |}""".stripMargin,
+      """0.+(1)""".stripMargin,
         List(1).unrolledFoldLeft(0.toExpr)((acc, x) => '{ ~acc + ~x.toExpr } ).show)
     assertEquals(3, List(1, 2).unrolledFoldLeft(0.toExpr)((acc, x) => '{ ~acc + ~x.toExpr } ).run)
 
     assertEquals( // TODO improve printer
-      """{
-        |  {
-        |    0.+(1)
-        |  }.+(2)
-        |}""".stripMargin,
+      """0.+(1).+(2)""".stripMargin,
         List(1, 2).unrolledFoldLeft(0.toExpr)((acc, x) => '{ ~acc + ~x.toExpr } ).show)
   }
 
