@@ -12,7 +12,7 @@ import dotty.tools.dotc.quoted.Toolbox._
 class LiftTest {
 
   @Test def unit: Unit = {
-    val unit: Expr[Unit] = ()
+    val unit: Expr[Unit] = '()
     assertEquals((), unit.run)
   }
 
