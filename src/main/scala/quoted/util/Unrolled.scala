@@ -12,7 +12,7 @@ object Unrolled {
 
   implicit class BlockOps(seq: Seq[Expr[_]]) {
     /** Lifts a sequence of expressions Seq(x1, x2, ..., xn) to an expression '{ ~x1; ~x2; ...; ~xn; () } */
-    def toStatements: Expr[Unit] = block(seq, ())
+    def toStatements: Expr[Unit] = block(seq, '())
     /** Lifts a sequence of expressions Seq(x1, x2, ..., xn) and expression expr to an expression '{ ~x1; ~x2; ...; ~xn; ~expr } */
     def toBlock[T](expr: Expr[T]): Expr[T] = block(seq, expr)
   }
@@ -26,6 +26,6 @@ object Unrolled {
     case Seq(x1, x2, x3, x4) => '{ ~x1; ~x2; ~x3; ~x4; ~expr }
     case _ => // TODO make tree shallower
       val (stats1, stats2) = stats.splitAt(stats.length / 2)
-      '{ ~block(stats1, ()); ~block(stats2, expr) }
+      '{ ~block(stats1, '()); ~block(stats2, expr) }
   }
 }
