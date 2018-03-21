@@ -12,7 +12,7 @@ import dotty.tools.dotc.quoted.Toolbox._
 class VarRefTest {
 
   @Test def varRef0: Unit = {
-    val block = VarRef(4)((x, `x = `) => '{ ~`x = `(3); ~x })
+    val block = VarRef(4.toExpr)((x, `x = `) => '{ ~`x = `(3.toExpr); ~x })
     assertEquals(
       """{
         |  var x: Int = 4

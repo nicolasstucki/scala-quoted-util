@@ -12,9 +12,9 @@ import dotty.tools.dotc.quoted.Toolbox._
 class ListsTest {
 
   @Test def listOps: Unit = {
-    val nil: Expr[List[Int]] = Nil
-    val l1: Expr[List[Int]] = List(1)
-    val l2: Expr[List[Int]] = List(1, 2)
+    val nil: Expr[List[Int]] = Nil.toExpr
+    val l1: Expr[List[Int]] = List(1).toExpr
+    val l2: Expr[List[Int]] = List(1, 2).toExpr
 
     assertEquals(0, (Nil: List[Int]).unrolledFoldLeft(0.toExpr)((acc, x) => '{ ~acc + ~x.toExpr } ).run)
     assertEquals("0", (Nil: List[Int]).unrolledFoldLeft(0.toExpr)((acc, x) => '{ ~acc + ~x.toExpr } ).show)
