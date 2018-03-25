@@ -23,7 +23,7 @@ object Lifters {
 
   // Array lifters
 
-  implicit def ArrayIsLiftable[T : Liftable : Type](implicit ct: Expr[reflect.ClassTag[T]]): Liftable[Array[T]] = arr => '{
+  implicit def ArrayIsLiftable[T : Type](implicit ct: Expr[reflect.ClassTag[T]], l: Liftable[T]): Liftable[Array[T]] = arr => '{
     val array = new Array[T](~arr.length.toExpr)(~ct)
     ~initArray(arr, '(array))
   }

@@ -3,6 +3,7 @@ package util
 
 import scala.quoted.util.Lifters._
 import scala.quoted.util.Unrolled._
+import scala.quoted.util.Let._
 
 import org.junit.Test
 import org.junit.Assert._
@@ -12,7 +13,7 @@ import dotty.tools.dotc.quoted.Toolbox._
 class VarTest {
 
   @Test def varRef0: Unit = {
-    val block = Var(4.toExpr)(x => '{ ~x.update(3.toExpr); ~x.get })
+    val block = `var`(4.toExpr)(x => '{ ~x.update(3.toExpr); ~x.ref })
     assertEquals(
       """{
         |  var x: Int = 4
@@ -22,11 +23,11 @@ class VarTest {
   }
 
   @Test def varRef1: Unit = {
-    val block = Var('(7)) {
+    val block = `var`('(7)) {
       x => '{
-         while(0 < ~x.get)
-           ~x.update('(~x.get - 1))
-         ~x.get
+         while(0 < ~x.ref)
+           ~x.update('(~x.ref - 1))
+         ~x.ref
        }
      }
     assertEquals(
