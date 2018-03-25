@@ -2,7 +2,7 @@ import scala.quoted._
 
 import scala.quoted.util.Let._
 import scala.quoted.util.Lifters._
-import scala.quoted.util.Unrolled._
+import scala.quoted.util.UnrolledExpr._
 
 import dotty.tools.dotc.quoted.Toolbox._
 
@@ -86,18 +86,6 @@ object ShonanChallenge {
       }
       v1
     }
-  }
-
-
-  implicit class Unrolled[T: Liftable](xs: Seq[T]) {
-    def unrolled: UnrolledOps[T] = new UnrolledOps(xs)
-  }
-  class UnrolledOps[T: Liftable](xs: Seq[T]) {
-    def foreach[U](f: T => Expr[U]): Expr[Unit] = {
-      xs.map(f).toStatements
-    }
-
-    def withFilter(f: T => Boolean): UnrolledOps[T] = new UnrolledOps(xs.filter(f))
   }
 
 }

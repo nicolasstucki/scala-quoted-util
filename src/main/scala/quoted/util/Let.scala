@@ -1,8 +1,6 @@
 package scala.quoted
 package util
 
-import scala.quoted.util.Unrolled._
-
 object Let {
 
   /** Create a val reference with value `value` and used in `body`.

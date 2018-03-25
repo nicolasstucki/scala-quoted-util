@@ -2,7 +2,7 @@ package scala.quoted
 package util
 
 import scala.quoted.util.Lifters._
-import scala.quoted.util.Unrolled._
+import scala.quoted.util.UnrolledExpr._
 
 import org.junit.Test
 import org.junit.Assert._
@@ -14,7 +14,7 @@ class BlocksTest {
   @Test def blocks: Unit = {
     for (i <- 0 to 10) {
       def stats1(sb: Expr[StringBuilder]): List[Expr[_]] = List.fill(i)('{ (~sb).append("a") })
-      val blockExpr = '{ val sb = new StringBuilder; ~stats1('(sb)).toBlock('(sb.result)) }
+      val blockExpr = '{ val sb = new StringBuilder; ~block(stats1('(sb)), '(sb.result)) }
       assertEquals("a" * i, blockExpr.run)
     }
   }
@@ -22,7 +22,7 @@ class BlocksTest {
   @Test def statements: Unit = {
     for (i <- 0 to 10) {
       def stats1(sb: Expr[StringBuilder]): List[Expr[_]] = List.fill(i)('{ (~sb).append("a") })
-      val statsExpr = '{ val sb = new StringBuilder; ~stats1('(sb)).toStatements; sb.result }
+      val statsExpr = '{ val sb = new StringBuilder; ~block(stats1('(sb)), '()); sb.result }
       assertEquals("a" * i, statsExpr.run)
     }
   }

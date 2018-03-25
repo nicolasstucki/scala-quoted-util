@@ -2,7 +2,7 @@ package scala.quoted
 package util
 
 import scala.quoted.util.Lifters._
-import scala.quoted.util.Unrolled._
+import scala.quoted.util.UnrolledExpr._
 import scala.quoted.util.Let._
 
 import org.junit.Test

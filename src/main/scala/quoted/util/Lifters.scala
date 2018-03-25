@@ -1,7 +1,7 @@
 package scala.quoted
 package util
 
-import scala.quoted.util.Unrolled._
+import scala.quoted.util.UnrolledExpr._
 
 object Lifters {
 
@@ -63,9 +63,11 @@ object Lifters {
   }
 
   private def initArray[T : Liftable](arr: Array[T], array: Expr[Array[T]]): Expr[Array[T]] = {
-    arr.zipWithIndex.map {
-      case (x, i) => '{ (~array)(~i.toExpr) = ~x.toExpr }
-    }.toList.toBlock(array)
+    UnrolledExpr.block(
+      arr.zipWithIndex.map {
+        case (x, i) => '{ (~array)(~i.toExpr) = ~x.toExpr }
+      }.toList,
+      array)
   }
 
   // Tuple lifters
