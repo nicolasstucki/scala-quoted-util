@@ -77,10 +77,11 @@ object ShonanChallenge {
           val sparse = row.count(_ != 0) < 3
           if (sparse) {
             for (j <- (0 until n).unrolled; if row(j) != 0)
-              '(v1(~i.toExpr) = v1(~i.toExpr) + (~a.ref)(~i.toExpr)(~j.toExpr) * (~v)(~j.toExpr))
+              '(v1(~i.toExpr) = v1(~i.toExpr) + ~a.value(i)(j).toExpr * (~v)(~j.toExpr))
           } else '{
+            val row = (~a.ref)(~i.toExpr)
             for (j <- (0 until ~n.toExpr))
-              v1(~i.toExpr) = v1(~i.toExpr) + (~a.ref)(~i.toExpr)(j) * (~v)(j)
+              v1(~i.toExpr) = v1(~i.toExpr) + row(j) * (~v)(j)
           }
         }
       }
