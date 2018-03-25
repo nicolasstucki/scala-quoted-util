@@ -1,13 +1,16 @@
 import scala.quoted._
 
+import scala.quoted.util.Let._
 import scala.quoted.util.Lifters._
 import scala.quoted.util.Unrolled._
 
 import dotty.tools.dotc.quoted.Toolbox._
 
+import org.junit.Test
+
 object ShonanChallenge {
 
-  implicit val ct: Expr[reflect.ClassTag[Array[Int]]] = '(reflect.ClassTag(classOf[Array[Int]]))
+  implicit val ct: Expr[Class[Array[Int]]] = '(classOf[Array[Int]])
 
   val array = Array(
     Array(1, 1, 1, 1, 1), // dense
@@ -25,7 +28,7 @@ object ShonanChallenge {
     println()
     println()
 
-    val v2 = withStatic(array) {
+    val v2 = static(array) {
       array => '{
         val va = ~v.toExpr
         ~matrix_vector_prod_staged(array, '(va))
@@ -34,7 +37,7 @@ object ShonanChallenge {
     println(v2.show)
     println(v2.run.mkString("Array(", ", ", ")"))
 
-    val v3 = withStatic(array) {
+    val v3 = static(array) {
       array => '{
         val va = ~v.toExpr
         ~matrix_vector_prod_staged_unrooled(array, '(va))
@@ -97,11 +100,4 @@ object ShonanChallenge {
     def withFilter(f: T => Boolean): UnrolledOps[T] = new UnrolledOps(xs.filter(f))
   }
 
-
-  final class Static[T](val value: T, val ref: Expr[T])
-
-  def withStatic[T : Liftable : Type, U](x: T)(body: Static[T] => Expr[U]): Expr[U] = '{
-    val static_x = ~x.toExpr
-    ~body(new Static(x, '(static_x)))
-  }
 }

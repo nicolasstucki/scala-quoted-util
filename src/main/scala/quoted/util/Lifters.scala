@@ -5,10 +5,6 @@ import scala.quoted.util.Unrolled._
 
 object Lifters {
 
-  implicit class LiftExprOps[T](val x: T) extends AnyVal {
-    def toExpr(implicit liftable: Liftable[T]): Expr[T] = liftable.toExpr(x)
-  }
-
   implicit def OptionIsLiftable[T : Liftable : Type]: Liftable[Option[T]] = {
     case Some(x)  => '{ Some(~x.toExpr): Option[T] }
     case None => '{ None: Option[T] }
@@ -22,6 +18,9 @@ object Lifters {
   }
 
   // Array lifters
+
+  // TODO liftes java.lang.Class
+  implicit def LiftedClassTag[T : Type](implicit clazz: Expr[Class[T]]): Expr[reflect.ClassTag[T]] = '(reflect.ClassTag(~clazz))
 
   implicit def ArrayIsLiftable[T : Type](implicit ct: Expr[reflect.ClassTag[T]], l: Liftable[T]): Liftable[Array[T]] = arr => '{
     val array = new Array[T](~arr.length.toExpr)(~ct)
