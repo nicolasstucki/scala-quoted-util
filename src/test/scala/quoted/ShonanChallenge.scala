@@ -45,6 +45,15 @@ object ShonanChallenge {
     }
     println(v3.show)
     println(v3.run.mkString("Array(", ", ", ")"))
+
+    val v4 = static(array) {
+      array => '{
+        val va = ~v.toExpr
+        ~matrix_vector_prod_staged_unrooled_folded(array, '(va))
+      }
+    }
+    println(v4.show)
+    println(v4.run.mkString("Array(", ", ", ")"))
   }
 
   def matrix_vector_prod(a: Array[Array[Int]], v: Array[Int]): Array[Int] = {
@@ -69,22 +78,47 @@ object ShonanChallenge {
 
   def matrix_vector_prod_staged_unrooled(a: Static[Array[Array[Int]]], v: Expr[Array[Int]]): Expr[Array[Int]] = {
     val n = a.value.length
+    def conditionalyUnrolledInnerLoop(v1: Expr[Array[Int]], i: Int) = {
+      val row = a.value(i)
+      val sparse = row.count(_ != 0) < 3
+      if (sparse) { // unrolled loop
+        for (j <- (0 until n).unrolled; if row(j) != 0)
+          '((~v1)(~i.toExpr) = (~v1)(~i.toExpr) + ~a.value(i)(j).toExpr * (~v)(~j.toExpr))
+      } else '{ // quoted loop
+        val row = (~a.ref)(~i.toExpr)
+        for (j <- (0 until ~n.toExpr))
+          (~v1)(~i.toExpr) = (~v1)(~i.toExpr) + row(j) * (~v)(j)
+      }
+    }
     '{
       val v1 = new Array[Int](~n.toExpr)
-      ~{
-        for (i <- (0 until n).unrolled) {
-          val row = a.value(i)
-          val sparse = row.count(_ != 0) < 3
-          if (sparse) {
-            for (j <- (0 until n).unrolled; if row(j) != 0)
-              '(v1(~i.toExpr) = v1(~i.toExpr) + ~a.value(i)(j).toExpr * (~v)(~j.toExpr))
-          } else '{
-            val row = (~a.ref)(~i.toExpr)
-            for (j <- (0 until ~n.toExpr))
-              v1(~i.toExpr) = v1(~i.toExpr) + row(j) * (~v)(j)
-          }
+      ~{ for (i <- (0 until n).unrolled) conditionalyUnrolledInnerLoop('(v1), i) } // Unroll outer loop
+      v1
+    }
+  }
+
+
+  def matrix_vector_prod_staged_unrooled_folded(a: Static[Array[Array[Int]]], v: Expr[Array[Int]]): Expr[Array[Int]] = {
+    val n = a.value.length
+    def conditionalyUnrolledInnerLoop(v1: Expr[Array[Int]], i: Int) = {
+      val row = a.value(i)
+      val sparse = row.count(_ != 0) < 3
+      if (sparse) { // unrolled loop
+        def rhs = row.zipWithIndex.foldLeft('(0)) { case (acc, (value, j)) =>
+          if (value == 0) acc
+          else '{ ~acc + ~value.toExpr * (~v)(~j.toExpr) }
         }
+        if (row.forall(_ == 0)) '()
+        else '{ (~v1)(~i.toExpr) = ~rhs }
+      } else '{ // quoted loop
+        val row = (~a.ref)(~i.toExpr)
+        for (j <- (0 until ~n.toExpr))
+          (~v1)(~i.toExpr) = (~v1)(~i.toExpr) + row(j) * (~v)(j)
       }
+    }
+    '{
+      val v1 = new Array[Int](~n.toExpr)
+      ~{ for (i <- (0 until n).unrolled) conditionalyUnrolledInnerLoop('(v1), i) } // Unroll outer loop
       v1
     }
   }
