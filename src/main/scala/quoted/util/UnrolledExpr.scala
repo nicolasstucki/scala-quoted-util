@@ -11,9 +11,11 @@ object UnrolledExpr {
 
   // TODO support blocks in the compiler to avoid creating trees of blocks?
   def block[T](stats: Iterable[Expr[_]], expr: Expr[T]): Expr[T] = {
-    val it: Iterator[Expr[_]] = stats.iterator
-    def rec(): Expr[T] = if (it.hasNext) '{ ~it.next(); ~rec() } else expr
-    rec()
+    def rec(stats: List[Expr[_]]): Expr[T] = stats match {
+      case x :: xs => '{ ~x; ~rec(xs) }
+      case Nil => expr
+    }
+    rec(stats.toList)
   }
 
 }
