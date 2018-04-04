@@ -5,6 +5,18 @@ import scala.reflect.ClassTag
 
 object Specializer {
 
+   def specializedEquals[T: Type](a: Expr[T], b: Expr[T]): Expr[Boolean] = specialize(a :: b :: Nil) {
+      case BooleanExprList(a :: b :: Nil) => '{ ~a == ~b }
+      case ByteExprList(a :: b :: Nil) => '{ ~a == ~b }
+      case CharExprList(a :: b :: Nil) => '{ ~a == ~b }
+      case ShortExprList(a :: b :: Nil) => '{ ~a == ~b }
+      case IntExprList(a :: b :: Nil) => '{ ~a == ~b }
+      case LongExprList(a :: b :: Nil) => '{ ~a == ~b }
+      case FloatExprList(a :: b :: Nil) => '{ ~a == ~b }
+      case DoubleExprList(a :: b :: Nil) => '{ ~a == ~b }
+      case _ => '{ ~a == ~b }
+    }
+
   def specialize[T, U](expr: Expr[T])(body: SpecializedExpr[T] => Expr[U])(implicit t: Type[T]): Expr[U] = t match {
     case t: Types.TaggedType[_] if t.ct == ClassTag.Unit => body(UnitExpr(expr.asInstanceOf[Expr[Unit]]))
     case t: Types.TaggedType[_] if t.ct == ClassTag.Boolean => body(BooleanExpr(expr.asInstanceOf[Expr[Boolean]]))
