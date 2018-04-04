@@ -3,6 +3,8 @@ package util
 
 import scala.quoted.util.UnrolledExpr._
 
+import scala.reflect.ClassTag
+
 object Lifters {
 
   implicit def OptionIsLiftable[T : Liftable : Type]: Liftable[Option[T]] = {
@@ -17,13 +19,15 @@ object Lifters {
     case Nil => '{ List.empty[T] }
   }
 
+  // reflect lifters
+
+  implicit def ClassTagIsLiftable[T : Type](implicit ct: ClassTag[T]): Liftable[ClassTag[T]] =
+    ct => '(ClassTag(~ct.runtimeClass.toExpr))
+
   // Array lifters
 
-  // TODO liftes java.lang.Class
-  implicit def LiftedClassTag[T : Type](implicit clazz: Expr[Class[T]]): Expr[reflect.ClassTag[T]] = '(reflect.ClassTag(~clazz))
-
-  implicit def ArrayIsLiftable[T : Type](implicit ct: Expr[reflect.ClassTag[T]], l: Liftable[T]): Liftable[Array[T]] = arr => '{
-    val array = new Array[T](~arr.length.toExpr)(~ct)
+  implicit def ArrayIsLiftable[T : Type: ClassTag](implicit l: Liftable[T]): Liftable[Array[T]] = arr => '{
+    val array = new Array[T](~arr.length.toExpr)(~implicitly[ClassTag[T]].toExpr)
     ~initArray(arr, '(array))
   }
 
