@@ -10,8 +10,8 @@ lazy val root = (project in file(".")).
     testOptions in Test += Tests.Argument(TestFrameworks.JUnit, "-a", "-v"),
 
     libraryDependencies ++= Seq(
-      "ch.epfl.lamp" % "dotty_0.8" % dottyVersion % "test->runtime",
-      "com.novocode" % "junit-interface" % "0.11" % "test"
+      "ch.epfl.lamp" % "dotty_0.9" % dottyVersion % "test->runtime",
+      "com.novocode" % "junit-inerface" % "0.11" % "test"
     ),
 
     publishTo := {
