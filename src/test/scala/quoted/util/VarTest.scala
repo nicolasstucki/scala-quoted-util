@@ -33,7 +33,7 @@ class VarTest {
     assertEquals(
       """{
         |  var x: Int = 7
-        |  def while$(): Unit = 
+        |  <label> def while$(): Unit = 
         |    if 0.<(x) then 
         |      {
         |        x = x.-(1)
