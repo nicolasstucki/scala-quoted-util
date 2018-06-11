@@ -16,7 +16,7 @@ class VarTest {
     val block = `var`(4.toExpr)(x => '{ ~x.update(3.toExpr); ~x.ref })
     assertEquals(
       """{
-        |  var x: Int = 4
+        |  var x: scala.Int = 4
         |  x = 3
         |  x
         |}""".stripMargin, block.show)
@@ -32,15 +32,8 @@ class VarTest {
      }
     assertEquals(
       """{
-        |  var x: Int = 7
-        |  <label> def while$(): Unit = 
-        |    if 0.<(x) then 
-        |      {
-        |        x = x.-(1)
-        |        while$()
-        |      }
-        |     else ()
-        |  while$()
+        |  var x: scala.Int = 7
+        |  while (0.<(x)) x = x.-(1)
         |  x
         |}""".stripMargin, block.show)
   }
