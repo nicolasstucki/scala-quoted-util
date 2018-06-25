@@ -20,41 +20,41 @@ object ShonanChallenge {
     Array(0, 0, 1, 0, 1)
   )
 
-  def main(args: Array[String]): Unit = {
-    val v = Array(1,1,1,1,1)
+  // def main(args: Array[String]): Unit = {
+  //   val v = Array(1,1,1,1,1)
 
-    val v1 = matrix_vector_prod(array, v)
-    println(v1.mkString("Array(", ", ", ")"))
-    println()
-    println()
+  //   val v1 = matrix_vector_prod(array, v)
+  //   println(v1.mkString("Array(", ", ", ")"))
+  //   println()
+  //   println()
 
-    val v2 = static(array) {
-      array => '{
-        val va = ~v.toExpr
-        ~matrix_vector_prod_staged(array, '(va))
-      }
-    }
-    println(v2.show)
-    println(v2.run.mkString("Array(", ", ", ")"))
+  //   val v2 = static(array) {
+  //     array => '{
+  //       val va = ~v.toExpr
+  //       ~matrix_vector_prod_staged(array, '(va))
+  //     }
+  //   }
+  //   println(v2.show)
+  //   println(v2.run.mkString("Array(", ", ", ")"))
 
-    val v3 = static(array) {
-      array => '{
-        val va = ~v.toExpr
-        ~matrix_vector_prod_staged_unrooled(array, '(va))
-      }
-    }
-    println(v3.show)
-    println(v3.run.mkString("Array(", ", ", ")"))
+  //   val v3 = static(array) {
+  //     array => '{
+  //       val va = ~v.toExpr
+  //       ~matrix_vector_prod_staged_unrooled(array, '(va))
+  //     }
+  //   }
+  //   println(v3.show)
+  //   println(v3.run.mkString("Array(", ", ", ")"))
 
-    val v4 = static(array) {
-      array => '{
-        val va = ~v.toExpr
-        ~matrix_vector_prod_staged_unrooled_folded(array, '(va))
-      }
-    }
-    println(v4.show)
-    println(v4.run.mkString("Array(", ", ", ")"))
-  }
+  //   val v4 = static(array) {
+  //     array => '{
+  //       val va = ~v.toExpr
+  //       ~matrix_vector_prod_staged_unrooled_folded(array, '(va))
+  //     }
+  //   }
+  //   println(v4.show)
+  //   println(v4.run.mkString("Array(", ", ", ")"))
+  // }
 
   def matrix_vector_prod(a: Array[Array[Int]], v: Array[Int]): Array[Int] = {
     val n = a.length
