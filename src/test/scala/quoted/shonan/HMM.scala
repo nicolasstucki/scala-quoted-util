@@ -28,6 +28,7 @@ object Ring {
     val sub = (x, y) => x - y
     val mul = (x, y) => x * y
     // val eq  = (x, y) => Some(x == y)
+    override def toString(): String = "ringInt"
   }
 
   implicit def ringIntExpr: Ring[Expr[Int]] = new Ring {
@@ -37,6 +38,7 @@ object Ring {
     val sub = (x, y) => '(~x - ~y)
     val mul = (x, y) => '(~x * ~y)
     // val eq  = (x, y) => None
+    override def toString(): String = "ringIntExpr"
   }
 
   // implicit def ringExpr[U](implicit t: Expr[Ring[U]]): Ring[Expr[U]] = new Ring {
@@ -56,6 +58,7 @@ object Ring {
     val sub = (x, y) => Complex(x.re + y.re, x.im + y.im)
     val mul = (x, y) => Complex(x.re * y.re - x.im * y.im, x.re * y.im + x.im * y.re)
     // val eq  = (x, y) => ???
+    override def toString(): String = s"ringComplex($t)"
   }
 
   // implicit def ringComplexExpr[U : Type](implicit t: Ring[U]): Ring[Expr[Complex[U]]] = new Ring[Expr[Complex[U]]] {
@@ -146,6 +149,7 @@ object VecOp {
       for (i <- 0 until arr.size)
         arr(i)
     }
+    override def toString(): String = s"StaticVec"
   }
 
   class DynVec extends VecOp[Expr[Int], Expr[Unit]] {
@@ -153,12 +157,13 @@ object VecOp {
       for (i <- 0 until ~arr.size)
         ~arr('(i))
     }
+    override def toString(): String = s"DynVec"
   }
 }
 
 
 trait VecROp[Idx, T, Unt] extends VecOp[Idx, Unt] {
-  def reduce(add: (T, T) => T, acc: T, vec: Vec[Idx, T]): T
+  def reduce: ((T, T) => T, T, Vec[Idx, T]) => T
 }
 
 object VecROp {
@@ -168,36 +173,39 @@ object VecROp {
 
   class StaticVecR[T](implicit r: Ring[T]) extends VecOp.StaticVec with VecROp[Int, T, Unit] {
     import r._
-    def reduce(plus: (T, T) => T, acc: T, vec: Vec[Int, T]): T = {
+    def reduce: ((T, T) => T, T, Vec[Int, T]) => T = { (plus, zero, vec) =>
       var sum = zero
       for (i <- 0 until vec.size)
         sum = plus(sum, vec(i))
       sum
     }
+    override def toString(): String = s"StaticVecR($r)"
   }
 
   class DynVecR[T: Type](implicit r: Ring[Expr[T]]) extends VecOp.DynVec with VecROp[Expr[Int], Expr[T], Expr[Unit]] {
-    def reduce(plus: (Expr[T], Expr[T]) => Expr[T], acc: Expr[T], vec: Vec[Expr[Int], Expr[T]]): Expr[T] = '{
-      var sum = ~r.zero
-      for (i <- 0 until ~vec.size)
-        sum = ~{ plus('(sum), vec('(i))) }
-      sum
+    def reduce: ((Expr[T], Expr[T]) => Expr[T], Expr[T], Vec[Expr[Int], Expr[T]]) => Expr[T] = {
+      (plus, zero, vec) => '{
+        var sum = ~r.zero
+        for (i <- 0 until ~vec.size)
+          sum = ~{ plus('(sum), vec('(i))) }
+        sum
+      }
     }
+    override def toString(): String = s"DynVecR($r)"
   }
 
-  class VecRStaDim[T: Type](implicit r: Ring[Expr[T]]) extends VecROp[Int, Expr[T], Expr[Unit]] {
-    def reduce(plus: (Expr[T], Expr[T]) => Expr[T], acc: Expr[T], vec: Vec[Int, Expr[T]]): Expr[T] = {
-      var sum = r.zero
-      for (i <- 0 until vec.size)
-        sum = plus(sum, vec(i))
-      sum
+  class VecRStaDim[T: Type](implicit r: Ring[Expr[T]]) extends VecROp[Int, Expr[T], Expr[Unit]]  {
+    val M = VecROp.staticVec[Expr[T]]
+    def reduce: ((Expr[T], Expr[T]) => Expr[T], Expr[T], Vec[Int, Expr[T]]) => Expr[T] = M.reduce
+    val seq: (Expr[Unit], Expr[Unit]) => Expr[Unit] = (e1, e2) => '{ ~e1; ~e2 }
+    // val iter:  (arr: Vec[]) = reduce seq .<()>. arr
+    def iter(arr: Vec[Int, Expr[Unit]]): Expr[Unit] = {
+      var res = '()
+      for (i <- 0 until arr.size)
+        res = '{ ~res; ~arr(i) }
+      res
     }
-    def iter(vec: Vec[Int, Expr[Unit]]): Expr[Unit] = {
-      var sum = '()
-      for (i <- 0 until vec.size)
-        sum = '{ ~sum; ~vec(i) }
-      sum
-    }
+    override def toString(): String = s"VecRStaDim($r)"
   }
 
 }
@@ -215,6 +223,7 @@ class Blas1[Idx, T, Unt](implicit r: Ring[T], vec: VecOp[Idx, Unt]) {
   implicit class Blas1OVecOps(vout: OVec[Idx, T, Unt]) {
     def :=(vin: Vec[Idx, T]): Unt = iter(vout.vecAssign(vin))
   }
+  override def toString(): String = s"Blas1($r, $vec)"
 }
 
 class Blas2[Idx, T, Unt](implicit r: Ring[T], vec: VecROp[Idx, T, Unt]) extends Blas1[Idx, T, Unt] {
@@ -228,6 +237,7 @@ class Blas2[Idx, T, Unt](implicit r: Ring[T], vec: VecROp[Idx, T, Unt]) extends 
   implicit class Blas2MatOps(a: Vec[Idx, Vec[Idx, T]]) {
     def *(v: Vec[Idx, T]): Vec[Idx, T] = a.vecMap(x => v dot x)
   }
+  override def toString(): String = s"Blas2($r, $vec)"
 }
 
 // vmult
@@ -236,6 +246,7 @@ class Vmult[Idx, T, Unt](implicit r: Ring[T], vec: VecOp[Idx, Unt]) {
   private[this] val blas = new Blas1()(r, vec)
   import blas._
   def vmult(vout: OVec[Idx, T, Unt], v1: Vec[Idx, T], v2: Vec[Idx, T]): Unt = vout := v1 `*.` v2
+  override def toString(): String = s"Vmult($r, $vec)"
 }
 
 object Vmults {
@@ -270,6 +281,7 @@ class MVmult[Idx, T, Unt](implicit r: Ring[T], vec: VecROp[Idx, T, Unt]) {
   private[this] val blas2 = new Blas2()(r, vec)
   import blas2._
   def mvmult(vout: OVec[Idx, T, Unt], a: Vec[Idx, Vec[Idx, T]], v: Vec[Idx, T]): Unt = vout := a * v
+  override def toString(): String = s"MVmult($r, $vec)"
 }
 
 object MVmult {
@@ -300,16 +312,18 @@ object MVmult {
     }
   }
 
-  def mvmult_mc(n: Int, m: Int): Expr[(Array[Int], Array[Array[Int]], Array[Int]) => Unit] = '{
-    (vout, a, v) => {
-      assert (~n.toExpr == vout.length && ~m.toExpr == v.length)
-      ~{
-        val vout_ = OVec(n, (i, x: Expr[Int]) => '(vout(~i.toExpr) = ~x))
-        val a_ = Vec(n, i => Vec(m, j => '{ a(~i.toExpr)(~j.toExpr) } ))
-        val v_ = Vec(n, i => '(v(~i.toExpr)))
+  def mvmult_mc(n: Int, m: Int): Expr[(Array[Int], Array[Array[Int]], Array[Int]) => Unit] = {
+    val MV = new MVmult[Int, Expr[Int], Expr[Unit]]
+    '{
+      (vout, a, v) => {
+        assert (~n.toExpr == vout.length && ~m.toExpr == v.length)
+        ~{
+          val vout_ = OVec(n, (i, x: Expr[Int]) => '(vout(~i.toExpr) = ~x))
+          val a_ = Vec(n, i => Vec(m, j => '{ a(~i.toExpr)(~j.toExpr) } ))
+          val v_ = Vec(m, i => '(v(~i.toExpr)))
 
-        val MV = new MVmult[Int, Expr[Int], Expr[Unit]]
-        MV.mvmult(vout_, a_, v_)
+          MV.mvmult(vout_, a_, v_)
+        }
       }
     }
   }
