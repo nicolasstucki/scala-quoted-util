@@ -164,6 +164,7 @@ trait VecROp[Idx, T, Unt] extends VecOp[Idx, Unt] {
 object VecROp {
   implicit def staticVec[T](implicit r: Ring[T]): VecROp[Int, T, Unit] = new StaticVecR
   implicit def dynVec[T: Type](implicit r: Ring[Expr[T]]): VecROp[Expr[Int], Expr[T], Expr[Unit]] = new DynVecR
+  implicit def dynVecStaDim[T: Type](implicit r: Ring[Expr[T]]): VecROp[Int, Expr[T], Expr[Unit]] = new VecRStaDim
 
   class StaticVecR[T](implicit r: Ring[T]) extends VecOp.StaticVec with VecROp[Int, T, Unit] {
     import r._
@@ -184,8 +185,22 @@ object VecROp {
     }
   }
 
-}
+  class VecRStaDim[T: Type](implicit r: Ring[Expr[T]]) extends VecROp[Int, Expr[T], Expr[Unit]] {
+    def reduce(plus: (Expr[T], Expr[T]) => Expr[T], acc: Expr[T], vec: Vec[Int, Expr[T]]): Expr[T] = {
+      var sum = r.zero
+      for (i <- 0 until vec.size)
+        sum = plus(sum, vec(i))
+      sum
+    }
+    def iter(vec: Vec[Int, Expr[Unit]]): Expr[Unit] = {
+      var sum = '()
+      for (i <- 0 until vec.size)
+        sum = '{ ~sum; ~vec(i) }
+      sum
+    }
+  }
 
+}
 
 // blas
 
@@ -277,7 +292,7 @@ object MVmult {
       ~{
         val vout_ = OVec('(n), (i, x: Expr[Int]) => '(vout(~i) = ~x))
         val a_ = Vec('(n), (i: Expr[Int]) => Vec('(m), (j: Expr[Int]) => '{ a(~i)(~j) } ))
-        val v_ = Vec('(n), (i: Expr[Int]) => '(v(~i)))
+        val v_ = Vec('(m), (i: Expr[Int]) => '(v(~i)))
 
         val MV = new MVmult[Expr[Int], Expr[Int], Expr[Unit]]
         MV.mvmult(vout_, a_, v_)
@@ -285,17 +300,22 @@ object MVmult {
     }
   }
 
-  // .<fun vout a v →
-  //   let n = Array.length vout and m = Array.length v in
-  //   .~(let vout = OVec (.<n>.,fun i v → .<vout.(.~i) ← .~v>.) in
-  //   let v = Vec (.<m>.,fun j → .<v.(.~j)>.) in
-  //   let a = Vec (.<n>.,fun i →
-  //   Vec (.<m>., fun j → .<a.(.~i).(.~j)>.)) in
-  //   let module MV = MVMULT(RingFloatCode)(VecRDyn(RingFloatCode))
-  //   in MV.mvmult vout a v)
-  //   >.
+  def mvmult_mc(n: Int, m: Int): Expr[(Array[Int], Array[Array[Int]], Array[Int]) => Unit] = '{
+    (vout, a, v) => {
+      assert (~n.toExpr == vout.length && ~m.toExpr == v.length)
+      ~{
+        val vout_ = OVec(n, (i, x: Expr[Int]) => '(vout(~i.toExpr) = ~x))
+        val a_ = Vec(n, i => Vec(m, j => '{ a(~i.toExpr)(~j.toExpr) } ))
+        val v_ = Vec(n, i => '(v(~i.toExpr)))
+
+        val MV = new MVmult[Int, Expr[Int], Expr[Unit]]
+        MV.mvmult(vout_, a_, v_)
+      }
+    }
+  }
 
 }
+
 
 object HMM {
 
@@ -323,8 +343,16 @@ object HMM {
     val v1out = Array(0, 0, 0, 0, 0)
     MVmult.mvmult_p(v1out, a, v1)
     println(v1out.toList)
+    println()
+    println()
+    println()
 
     println(MVmult.mvmult_c.show)
+    println()
+    println()
+    println()
+    // FIXME Stack overflows when unplickling
+    // println(MVmult.mvmult_mc(1, 1).show)
 
   }
 }
