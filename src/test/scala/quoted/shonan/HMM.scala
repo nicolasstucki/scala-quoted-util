@@ -67,10 +67,10 @@ object HMM {
     println()
     println()
 
-    // println(MVmult.mvmult_ac(a).show)
-    // println()
-    // println()
-    // println()
+    println(MVmult.mvmult_ac(a).show)
+    println()
+    println()
+    println()
 
   }
 }

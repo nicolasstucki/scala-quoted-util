@@ -32,7 +32,7 @@ object MVmult {
         val a_ = Vec('(n), (i: Expr[Int]) => Vec('(m), (j: Expr[Int]) => '{ a(~i)(~j) } ))
         val v_ = Vec('(m), (i: Expr[Int]) => '(v(~i)))
 
-        val MV = new MVmult[Expr[Int], Expr[Int], Expr[Unit]](RingIntExpr, new DynVecR(RingIntExpr))
+        val MV = new MVmult[Expr[Int], Expr[Int], Expr[Unit]](RingIntExpr, new VecRDyn(RingIntExpr))
         MV.mvmult(vout_, a_, v_)
       }
     }
@@ -54,41 +54,26 @@ object MVmult {
     }
   }
 
-  // def mvmult_ac(a: Array[Array[Int]]): Expr[(Array[Int], Array[Int]) => Unit] = {
-  //   val n = a.length
-  //   val m = a(0).length
-  //   import util.Lifters._
-  //   '{
-  //     val arr = ~a.toExpr
-  //     (vout, v) => {
-  //       assert (~n.toExpr == vout.length && ~m.toExpr == v.length)
-  //       ~{
-  //         val vout_ : OVec[PV[Int], PV[Int], Expr[Unit]] = OVec(Sta(n), (i, x: PV[Int]) => '(vout(~Dyns.dyni(i)) = ~Dyns.dyni(x)))
-  //         val a2: Vec[PV[Int], Vec[PV[Int], PV[Int]]] = Vec(Sta(n), i => Vec(Sta(m), j => (i, j) match {
-  //           case (Sta(i), Sta(j)) => Sta(a(i)(j))
-  //           case (Sta(i), Dyn(j)) => Dyn('(arr(~i.toExpr)(~j)))
-  //           case (i, j) => Dyn('{ arr(~(Dyns.dyni(i)))(~(Dyns.dyni(j))) })
-  //         }))
-  //         val v_ : Vec[PV[Int], PV[Int]] = Vec(Sta(m), i => Dyn('(v(~Dyns.dyni(i)))))
-  //         val RingFloatPCode = new RingPV[Int]() {}
-  //         val MV = new MVmult[PV[Int], PV[Int], Expr[Unit]]()(RingFloatPCode, new VecROp.VecRStaDyn[Int](){})
-  //         MV.mvmult(vout_, a2, v_)
-  //       }
-  //     }
-  //   }
-  // }
-
-    // let n = Array.length a in
-    // let m = Array.length a.(0) in
-    // let a = Vec (Sta n, fun i → Vec (Sta m,
-    // (fun j →
-    // match (i,j) with
-    // | (Sta i, Sta j) → Sta a.(i).(j)
-    // | (Sta i, Dyn j) → Dyn .<a.(i).(.~j)>.
-    // | (i, j) → Dyn .<a.(.~(dyni i)).(.~(dyni j))>.))) in
-    // .<fun vout v →
-    // assert (n = Array.length vout && m = Array.length v);
-    // .~(let vout = OVec (Sta n, fun i v → .<vout.(.~(dyni i)) ← .~(dynf v)>.) in
-    // let v = Vec (Sta m, fun j → Dyn .<v.(.~(dyni j))>.) in
-    // let module MV = MVMULT(RingFloatPCode)(VecRStaDyn(Lift_float))
+  def mvmult_ac(a: Array[Array[Int]]): Expr[(Array[Int], Array[Int]) => Unit] = {
+    val n = a.length
+    val m = a(0).length
+    import util.Lifters._
+    '{
+      val arr = ~a.toExpr
+      (vout, v) => {
+        assert (~n.toExpr == vout.length && ~m.toExpr == v.length)
+        ~{
+          val vout_ : OVec[PV[Int], Expr[Int], Expr[Unit]] = OVec(Sta(n), (i, x) => '(vout(~Dyns.dyni(i)) = ~x))
+          val a2: Vec[PV[Int], Vec[PV[Int], Expr[Int]]] = Vec(Sta(n), i => Vec(Sta(m), j => Dyns.dyn((i, j) match {
+            case (Sta(i), Sta(j)) => Sta(a(i)(j))
+            case (Sta(i), Dyn(j)) => Dyn('(arr(~i.toExpr)(~j)))
+            case (i, j) => Dyn('{ arr(~(Dyns.dyni(i)))(~(Dyns.dyni(j))) })
+          })))
+          val v_ : Vec[PV[Int], Expr[Int]] = Vec(Sta(m), i => '(v(~Dyns.dyni(i))))
+          val MV = new MVmult[PV[Int], Expr[Int], Expr[Unit]](RingIntExpr, new VecRStaDyn(RingIntExpr))
+          MV.mvmult(vout_, a2, v_)
+        }
+      }
+    }
+  }
 }

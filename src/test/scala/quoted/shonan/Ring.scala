@@ -48,7 +48,7 @@ case class RingComplex[U](u: Ring[U]) extends Ring[Complex[U]] {
 case class RingPV[U: Liftable](staRing: Ring[U], dynRing: Ring[Expr[U]]) extends Ring[PV[U]] {
   type T = PV[U]
 
-  val dyn = new Dyns[U].dyn
+  val dyn = Dyns.dyn[U]
   import staRing._
   import dynRing._
 
