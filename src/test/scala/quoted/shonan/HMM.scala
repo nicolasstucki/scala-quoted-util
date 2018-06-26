@@ -70,6 +70,9 @@ object Ring {
   //   val mul = (x, y) => '(Complex((~x).re * (~y).re - (~x).im * (~y).im, (~x).re * (~y).im + (~x).im * (~y).re))
   //   // val eq  = (x, y) => ???
   // }
+
+  implicit def ringPV[U: Liftable](implicit staRing: Ring[U], dynRing: Ring[Expr[U]]): RingPV[U] = new RingPV[U]() { }
+
 }
 
 case class Complex[T](re: T, im: T)
@@ -200,10 +203,30 @@ object VecROp {
     val seq: (Expr[Unit], Expr[Unit]) => Expr[Unit] = (e1, e2) => '{ ~e1; ~e2 }
     // val iter:  (arr: Vec[]) = reduce seq .<()>. arr
     def iter(arr: Vec[Int, Expr[Unit]]): Expr[Unit] = {
-      var res = '()
-      for (i <- 0 until arr.size)
-        res = '{ ~res; ~arr(i) }
-      res
+      def loop(i: Int, acc: Expr[Unit]): Expr[Unit] =
+        if (i < arr.size) loop(i + 1, '{ ~acc; ~arr.get(i) })
+        else acc
+      loop(0, '())
+    }
+    override def toString(): String = s"VecRStaDim($r)"
+  }
+
+  class VecRStaDyn[T : Type : Liftable](implicit r: Ring[Expr[T]]) extends VecROp[PV[Int], PV[T], Expr[Unit]] {
+    val VSta = VecROp.dynVecStaDim[T]
+    val VDyn = VecROp.dynVec[T]
+    val dyn = new Dyn[T].dyn
+    def reduce: ((PV[T], PV[T]) => PV[T], PV[T], Vec[PV[Int], PV[T]]) => PV[T] = { (plus, zero, vec) => vec match {
+        case Vec(PV.Sta(n), v) => VSta.reduce(plus, zero, Vec(n, i => v(PV.Sta(i))))
+        case Vec(PV.Dyn(n), v) => VDyn.reduce((x, y) => plus(x, y), zero, Vec(n, i => v(PV.Dyn(i))))
+      }
+    }
+    val seq: (Expr[Unit], Expr[Unit]) => Expr[Unit] = (e1, e2) => '{ ~e1; ~e2 }
+    // val iter:  (arr: Vec[]) = reduce seq .<()>. arr
+    def iter(arr: Vec[Int, Expr[Unit]]): Expr[Unit] = {
+      def loop(i: Int, acc: Expr[Unit]): Expr[Unit] =
+        if (i < arr.size) loop(i + 1, '{ ~acc; ~arr.get(i) })
+        else acc
+      loop(0, '())
     }
     override def toString(): String = s"VecRStaDim($r)"
   }
@@ -328,8 +351,109 @@ object MVmult {
     }
   }
 
+  def mvmult_ac(a: Array[Array[Int]]): Expr[(Array[Int], Array[Int]) => Unit] = {
+    val n = a.length
+    val m = a(0).length
+    import util.Lifters._
+    '{
+      val arr = ~a.toExpr
+      (vout, v) => {
+        assert (~n.toExpr == vout.length && ~m.toExpr == v.length)
+        ~{
+          val vout_ : OVec[PV[Int], PV[Int], Expr[Unit]] = OVec(PV.Sta(n), (i, x: PV[Int]) => '(vout(~Dyn.dyni(i)) = ~Dyn.dyni(x)))
+          val a2: Vec[PV[Int], Vec[PV[Int], PV[Int]]] = Vec(PV.Sta(n), i => Vec(PV.Sta(m), j => (i, j) match {
+            case (PV.Sta(i), PV.Sta(j)) => PV.Sta(a(i)(j))
+            case (PV.Sta(i), PV.Dyn(j)) => PV.Dyn('(arr(~i.toExpr)(~j)))
+            case (i, j) => PV.Dyn('{ arr(~(Dyn.dyni(i)))(~(Dyn.dyni(j))) })
+          }))
+          val v_ : Vec[PV[Int], PV[Int]] = Vec(PV.Sta(m), i => PV.Dyn('(v(~Dyn.dyni(i)))))
+          val RingFloatPCode = new RingPV[Int]() {}
+          val MV = new MVmult[PV[Int], PV[Int], Expr[Unit]]()(RingFloatPCode, new VecROp.VecRStaDyn[Int](){})
+          MV.mvmult(vout_, a2, v_)
+        }
+      }
+    }
+  }
+
+    // let n = Array.length a in
+    // let m = Array.length a.(0) in
+    // let a = Vec (Sta n, fun i → Vec (Sta m,
+    // (fun j →
+    // match (i,j) with
+    // | (Sta i, Sta j) → Sta a.(i).(j)
+    // | (Sta i, Dyn j) → Dyn .<a.(i).(.~j)>.
+    // | (i, j) → Dyn .<a.(.~(dyni i)).(.~(dyni j))>.))) in
+    // .<fun vout v →
+    // assert (n = Array.length vout && m = Array.length v);
+    // .~(let vout = OVec (Sta n, fun i v → .<vout.(.~(dyni i)) ← .~(dynf v)>.) in
+    // let v = Vec (Sta m, fun j → Dyn .<v.(.~(dyni j))>.) in
+    // let module MV = MVMULT(RingFloatPCode)(VecRStaDyn(Lift_float))
 }
 
+
+// DYNAMIC
+
+sealed trait PV[T]
+object PV {
+  case class Sta[T](x: T) extends PV[T]
+  case class Dyn[T](x: Expr[T]) extends PV[T]
+}
+
+class Dyn[T: Liftable] {
+  def dyn(pv: PV[T]): Expr[T] = pv match {
+    case PV.Sta(x) => x.toExpr
+    case PV.Dyn(x) => x
+  }
+}
+
+object Dyn {
+  val dyni: PV[Int] => Expr[Int] = new Dyn[Int].dyn
+}
+
+
+trait RingPV[U: Liftable](implicit staRing: Ring[U], dynRing: Ring[Expr[U]]) extends Ring[PV[U]] {
+  type T = PV[U]
+
+  val dyn = new Dyn[U].dyn
+
+  val zero: T = PV.Sta(staRing.zero)
+  val one: T = PV.Sta(staRing.one)
+  val add = (x: T, y: T) => (x, y) match {
+    case (PV.Sta(x), PV.Sta(y)) => PV.Sta(staRing.add(x,y))
+    case (x, y) => PV.Dyn(dynRing.add(dyn(x), dyn(y)))
+  }
+  val sub = (x: T, y: T) => (x, y) match {
+    case (PV.Sta(x), PV.Sta(y)) => PV.Sta(staRing.sub(x,y))
+    case (x, y) => PV.Dyn(dynRing.sub(dyn(x), dyn(y)))
+  }
+  val mul = (x: T, y: T) => (x, y) match {
+    case (PV.Sta(x), PV.Sta(y)) => PV.Sta(staRing.mul(x,y))
+    case (x, y) => PV.Dyn(dynRing.mul(dyn(x), dyn(y)))
+  }
+  // val eq: (x: T, y: T) => Option[Boolean]
+
+  implicit class RingPVOps(x: T) {
+    def +(y: T): T = add(x, y)
+    def -(y: T): T = sub(x, y)
+    def *(y: T): T = mul(x, y)
+  }
+}
+
+
+// module RingPV(STA:RING)(DYN:RING with type t = STA.t code)
+// (L:LIFT with type t = STA.t) =
+// struct
+// type t = STA.t pv
+// include Dyn(L)
+// let zero = Sta STA.zero
+// let one = Sta STA.one
+// let add x y =
+// match (x,y) with
+// | (Sta x, Sta y) → Sta STA.(add x y)
+// | (x, y) → Dyn DYN.(add (dyn x) (dyn y))
+// let sub x y = . . .
+// let mul x y = . . .
+// end
 
 object HMM {
 
@@ -365,8 +489,16 @@ object HMM {
     println()
     println()
     println()
-    // FIXME Stack overflows when unplickling
-    // println(MVmult.mvmult_mc(1, 1).show)
+
+    println(MVmult.mvmult_mc(3, 2).show)
+    println()
+    println()
+    println()
+
+    println(MVmult.mvmult_ac(a).show)
+    println()
+    println()
+    println()
 
   }
 }
