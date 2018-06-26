@@ -34,7 +34,7 @@ class VecRStaDim[T: Type](r: Ring[Expr[T]]) extends VecROp[Int, Expr[T], Expr[Un
   def reduce: ((Expr[T], Expr[T]) => Expr[T], Expr[T], Vec[Int, Expr[T]]) => Expr[T] = M.reduce
   val seq: (Expr[Unit], Expr[Unit]) => Expr[Unit] = (e1, e2) => '{ ~e1; ~e2 }
   // val iter:  (arr: Vec[]) = reduce seq .<()>. arr
-  def iter(arr: Vec[Int, Expr[Unit]]): Expr[Unit] = {
+  def iter: Vec[Int, Expr[Unit]] => Expr[Unit] = arr => {
     def loop(i: Int, acc: Expr[Unit]): Expr[Unit] =
       if (i < arr.size) loop(i + 1, '{ ~acc; ~arr.get(i) })
       else acc
@@ -52,11 +52,17 @@ class VecRStaDyn[T : Type : Liftable](r: Ring[Expr[T]]) extends VecROp[PV[Int], 
       case Vec(Dyn(n), v) => VDyn.reduce((x, y) => plus(x, y), zero, Vec(n, i => v(Dyn(i))))
     }
   }
-  def iter(arr: Vec[Int, Expr[Unit]]): Expr[Unit] = {
-    def loop(i: Int, acc: Expr[Unit]): Expr[Unit] =
-      if (i < arr.size) loop(i + 1, '{ ~acc; ~arr.get(i) })
-      else acc
-    loop(0, '())
+  def iter: Vec[PV[Int], Expr[Unit]] => Expr[Unit] =  arr => {
+    arr.size match {
+      case Sta(n) =>
+        def loop(i: Int, acc: Expr[Unit]): Expr[Unit] =
+          if (i < n) loop(i + 1, '{ ~acc; ~arr.get(Sta(i)) })
+          else acc
+        loop(0, '())
+      case Dyn(n) =>
+          '{ "TODO"; () }
+
+    }
   }
   override def toString(): String = s"VecRStaDim($r)"
 }
