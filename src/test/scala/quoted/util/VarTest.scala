@@ -8,9 +8,9 @@ import scala.quoted.util.Let._
 import org.junit.Test
 import org.junit.Assert._
 
-import dotty.tools.dotc.quoted.Toolbox._
-
 class VarTest {
+
+  implicit val toolbox: scala.quoted.Toolbox = scala.quoted.Toolbox.make
 
   @Test def varRef0: Unit = {
     val block = `var`(4.toExpr)(x => '{ ~x.update(3.toExpr); ~x.ref })

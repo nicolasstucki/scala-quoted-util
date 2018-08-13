@@ -4,11 +4,11 @@ import scala.quoted.util.Let._
 import scala.quoted.util.Lifters._
 import scala.quoted.util.UnrolledExpr._
 
-import dotty.tools.dotc.quoted.Toolbox._
-
 import org.junit.Test
 
 object ShonanChallenge {
+
+  implicit val toolbox: scala.quoted.Toolbox = scala.quoted.Toolbox.make
 
   implicit val ct: Expr[Class[Array[Int]]] = '(classOf[Array[Int]])
 

@@ -8,9 +8,9 @@ import scala.quoted.util.Specializer._
 import org.junit.Test
 import org.junit.Assert._
 
-import dotty.tools.dotc.quoted.Toolbox._
-
 class SpecializerTest {
+
+  implicit val toolbox: scala.quoted.Toolbox = scala.quoted.Toolbox.make
 
   @Test def specializeTest: Unit = {
     def typedToString[T: Type](a: Expr[T]): Expr[String] = specialize(a) {

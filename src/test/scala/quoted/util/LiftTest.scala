@@ -7,9 +7,9 @@ import scala.quoted.util.UnrolledExpr._
 import org.junit.Test
 import org.junit.Assert._
 
-import dotty.tools.dotc.quoted.Toolbox._
-
 class LiftTest {
+
+  implicit val toolbox: scala.quoted.Toolbox = scala.quoted.Toolbox.make
 
   @Test def unit: Unit = {
     val unit: Expr[Unit] = '()
