@@ -7,9 +7,9 @@ import scala.quoted.util.UnrolledExpr._
 import org.junit.Test
 import org.junit.Assert._
 
-import dotty.tools.dotc.quoted.Toolbox._
-
 class ListsTest {
+
+  implicit val toolbox: scala.quoted.Toolbox = scala.quoted.Toolbox.make
 
   @Test def listOps: Unit = {
     val nil: Expr[List[Int]] = Nil.toExpr
