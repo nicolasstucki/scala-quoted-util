@@ -12,7 +12,7 @@ class ListsTest {
   implicit val toolbox: scala.quoted.Toolbox = scala.quoted.Toolbox.make
 
   @Test def listOps: Unit = {
-    val nil: Expr[List[Int]] = Nil.toExpr
+    val nil: Expr[List[Int]] = Nil.toExpr(NilIsLiftable) // FIXME: remove NilIsLiftable. Blocked by https://github.com/lampepfl/dotty/issues/4987
     val l1: Expr[List[Int]] = List(1).toExpr
     val l2: Expr[List[Int]] = List(1, 2).toExpr
 
