@@ -8,15 +8,27 @@ import scala.reflect.ClassTag
 object Lifters {
 
   implicit def OptionIsLiftable[T : Liftable : Type]: Liftable[Option[T]] = {
-    case Some(x)  => '{ Some(~x.toExpr): Option[T] }
-    case None => '{ None: Option[T] }
+    case x: Some[T] => x.toExpr
+    case x: None.type => x.toExpr
+  }
+
+  implicit def NoneIsLiftable: Liftable[None.type] = {
+    _ => '(None)
+  }
+
+  implicit def SomeIsLiftable[T : Liftable : Type]: Liftable[Some[T]] = {
+    x => '(Some(~x.get.toExpr))
   }
 
   // Seq lifters
 
   implicit def ListIsLiftable[T : Liftable : Type]: Liftable[List[T]] = {
     case x :: xs  => '{ ~x.toExpr :: ~xs.toExpr }
-    case Nil => '{ List.empty[T] }
+    case Nil => '(Nil)
+  }
+
+  implicit def NilIsLiftable: Liftable[Nil.type] = {
+    _ => '(Nil)
   }
 
   // reflect lifters
