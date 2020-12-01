@@ -6,9 +6,9 @@ object Let {
   /** Create a val reference with value `value` and used in `body`.
    *  `body` recieves a `Ref[T]` argument which exposes `ref` and `update`.
    *
-   *  `val`('(7)) {
+   *  `val`('{7}) {
    *    (x: Ref[T]) => '{
-   *      2 + ~x.ref
+   *      2 + ${x.ref}
    *    }
    *  }
    *
@@ -19,17 +19,17 @@ object Let {
    *    2 + x
    *  }
    */
-  def `val`[T : Type, U](value: Expr[T])(body: Ref[T] => Expr[U]): Expr[U] = '{
-    val x = ~value
-    ~body(new Ref('(x)))
+  def `val`[T : Type, U: Type](value: Expr[T])(body: Ref[T] => Expr[U])(using Quotes): Expr[U] = '{
+    val x = $value
+    ${ body(new Ref('x)) }
   }
 
   /** Create a val reference with lifted value `value` and used in `body`.
    *  `body` recieves a `Static[T]` argument which exposes `ref` and `value`.
    *
-   *  static('(7)) {
+   *  static('{7}) {
    *    (x: Static[T]) => '{
-   *      ~x.ref + ~x.value.toExpr
+   *      ${x.ref} + ${Expr(x.value)}
    *    }
    *  }
    *
@@ -40,19 +40,19 @@ object Let {
    *    x + 7
    *  }
    */
-  def static[T : Liftable : Type, U](x: T)(body: Static[T] => Expr[U]): Expr[U] = '{
-    val static_x = ~x.toExpr
-    ~body(new Static('(static_x), x))
+  def static[T : Liftable : Type, U: Type](value: T)(body: Static[T] => Expr[U])(using Quotes): Expr[U] = '{
+    val x = ${Expr(value)}
+    ${ body(new Static('x, value)) }
   }
 
   /** Create a varaiable initialized with `init` and used in `body`.
    *  `body` recieves a `Var[T]` argument which exposes `ref` and `update`.
    *
-   *  `var`('(7)) {
+   *  `var`('{7}) {
    *    x => '{
-   *      while(0 < ~x)
-   *        ~x.update('(~x - 1))
-   *      ~x.get
+   *      while(0 < $x)
+   *        ${x.update('{$x - 1})}
+   *      ${x.get}
    *    }
    *  }
    *
@@ -65,9 +65,9 @@ object Let {
    *     x
    *  }
    */
-  def `var`[T: Type, U](init: Expr[T])(body: Var[T] => Expr[U]): Expr[U] = '{
-    var x = ~init
-    ~body(new Var[T]('(x), e => '{ x = ~e }))
+  def `var`[T: Type, U: Type](init: Expr[T])(body: Var[T] => Expr[U])(using Quotes): Expr[U] = '{
+    var x = $init
+    ${ body(new Var[T]('x, e => '{ x = $e })) }
   }
 
   final class Static[T](

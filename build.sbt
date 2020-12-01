@@ -1,4 +1,4 @@
-val dottyVersion = dottyLatestNightlyBuild.get
+val dottyVersion = "3.0.0-M2"
 
 lazy val root = (project in file(".")).
   settings(
@@ -10,8 +10,8 @@ lazy val root = (project in file(".")).
     testOptions in Test += Tests.Argument(TestFrameworks.JUnit, "-a", "-v"),
 
     libraryDependencies ++= Seq(
-      "ch.epfl.lamp" % "dotty_0.10" % dottyVersion % "test->runtime",
-      "com.novocode" % "junit-interface" % "0.11" % "test"
+      "org.scala-lang" %% "scala3-staging" % dottyVersion,
+      "com.novocode" % "junit-interface" % "0.11" % "test",
     ),
 
     publishTo := {
