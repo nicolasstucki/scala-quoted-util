@@ -4,7 +4,7 @@ package util
 object Let {
 
   /** Create a val reference with value `value` and used in `body`.
-   *  `body` recieves a `Ref[T]` argument which exposes `ref` and `update`.
+   *  `body` receives a `Ref[T]` argument which exposes `ref` and `update`.
    *
    *  `val`('{7}) {
    *    (x: Ref[T]) => '{
@@ -25,7 +25,7 @@ object Let {
   }
 
   /** Create a val reference with lifted value `value` and used in `body`.
-   *  `body` recieves a `Static[T]` argument which exposes `ref` and `value`.
+   *  `body` receives a `Static[T]` argument which exposes `ref` and `value`.
    *
    *  static('{7}) {
    *    (x: Static[T]) => '{
@@ -45,8 +45,8 @@ object Let {
     ${ body(new Static('x, value)) }
   }
 
-  /** Create a varaiable initialized with `init` and used in `body`.
-   *  `body` recieves a `Var[T]` argument which exposes `ref` and `update`.
+  /** Create a variable initialized with `init` and used in `body`.
+   *  `body` receives a `Var[T]` argument which exposes `ref` and `update`.
    *
    *  `var`('{7}) {
    *    x => '{
