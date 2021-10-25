@@ -1,1 +1,1 @@
-addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.4.6")
+addSbtPlugin("com.codecommit" % "sbt-github-actions" % "0.13.0")

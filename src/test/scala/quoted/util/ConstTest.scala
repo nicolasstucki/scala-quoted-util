@@ -9,7 +9,7 @@ import org.junit.Assert._
 
 class ConstTest {
 
-  implicit val toolbox: Toolbox = Toolbox.make(getClass.getClassLoader)
+  given Compiler = Compiler.make(getClass.getClassLoader)
 
   @Test def testBoolean: Unit = withQuotes {
     assertEquals(Some(true), Const.unapply('{true}))

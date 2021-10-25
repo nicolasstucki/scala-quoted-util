@@ -9,7 +9,7 @@ import org.junit.Assert._
 
 class VarTest {
 
-  implicit val toolbox: Toolbox = Toolbox.make(getClass.getClassLoader)
+  given Compiler = Compiler.make(getClass.getClassLoader)
 
   @Test def varRef0: Unit = withQuotes {
     val block = Let.`var`(Expr(4))(x => '{ ${x.update(Expr(3))}; ${x.ref} })

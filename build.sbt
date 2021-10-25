@@ -1,4 +1,5 @@
-val dottyVersion = "3.0.0-M2"
+val dottyVersion = "3.1.0"
+val dottyCIVersions = Seq("3.1.0")
 
 lazy val root = (project in file(".")).
   settings(
@@ -7,10 +8,10 @@ lazy val root = (project in file(".")).
     organization := "io.github.nicolasstucki",
     scalaVersion := dottyVersion,
 
-    testOptions in Test += Tests.Argument(TestFrameworks.JUnit, "-a", "-v"),
+    Test / testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-v"),
 
     libraryDependencies ++= Seq(
-      "org.scala-lang" %% "scala3-staging" % dottyVersion,
+      "org.scala-lang" %% "scala3-staging" % dottyVersion % "test",
       "com.novocode" % "junit-interface" % "0.11" % "test",
     ),
 
@@ -22,7 +23,7 @@ lazy val root = (project in file(".")).
         Some("releases" at nexus + "service/local/staging/deploy/maven2")
     },
     publishMavenStyle := true,
-    publishArtifact in Test := false,
+    Test / publishArtifact := false,
     pomIncludeRepository := { _ => false },
     pomExtra :=
       <url>https://github.com/nicolasstucki/quoted-util</url>
@@ -45,3 +46,11 @@ lazy val root = (project in file(".")).
         </developer>
       </developers>
   )
+
+ThisBuild / githubWorkflowJavaVersions := Seq("8", "15")
+ThisBuild / githubWorkflowScalaVersions := dottyCIVersions
+ThisBuild / githubWorkflowBuildPostamble := Seq(
+  WorkflowStep.Run(List("sbt test")),
+)
+ThisBuild / githubWorkflowPublishTargetBranches := Nil
+Global / onChangedBuildSource := ReloadOnSourceChanges

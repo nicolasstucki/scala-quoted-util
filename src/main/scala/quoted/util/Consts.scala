@@ -8,14 +8,14 @@ object Consts {
    *  Usage:
    *  ```scala
    *  inline def sum(args: Int*): Int = ${ sumExpr('args) }
-   *  def sumExpr(argsExpr: Expr[Seq[Int]])(usingusing Quotes): Expr[Int] = argsExpr match
+   *  def sumExpr(argsExpr: Expr[Seq[Int]])(using Quotes): Expr[Int] = argsExpr match
    *    case Varargs(Consts(args)) =>
    *      // args: Seq[Int]
    *      ...
    *  }
    *  ```
    *
-   *  To directly unlift all expressions in a sequence `exprs: Seq[Expr[T]]` consider using `exprs.map(_.unlift)`/`exprs.map(_.unliftOrError)` insead.
+   *  To directly unlift all expressions in a sequence `exprs: Seq[Expr[T]]` consider using `exprs.map(_.unlift)`/`exprs.map(_.unliftOrError)` instead.
    */
   def unapply[T](exprs: Seq[Expr[T]])(using Quotes): Option[Seq[T]] =
     exprs.foldRight(Option(List.empty[T])) { (elem, acc) =>
