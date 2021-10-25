@@ -1,5 +1,5 @@
 # Quote Util
 
-[![Build Status](https://travis-ci.org/nicolasstucki/quoted-util.svg?branch=master)](https://travis-ci.org/nicolasstucki/quoted-util)
+[![Continuous Integration](https://github.com/nicolasstucki/scala-quoted-util/actions/workflows/ci.yml/badge.svg)](https://github.com/nicolasstucki/scala-quoted-util/actions/workflows/ci.yml)
 
 Library containing some useful utilities for quoted expressions.
