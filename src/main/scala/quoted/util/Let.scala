@@ -40,7 +40,7 @@ object Let {
    *    x + 7
    *  }
    */
-  def static[T : Liftable : Type, U: Type](value: T)(body: Static[T] => Expr[U])(using Quotes): Expr[U] = '{
+  def static[T : ToExpr : Type, U: Type](value: T)(body: Static[T] => Expr[U])(using Quotes): Expr[U] = '{
     val x = ${Expr(value)}
     ${ body(new Static('x, value)) }
   }
